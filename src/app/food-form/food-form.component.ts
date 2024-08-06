@@ -8,6 +8,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CardModule } from 'primeng/card';
 import { FoodService } from '../services/food.service';
+import { FileUploadModule } from 'primeng/fileupload';
+import { FileSelectEvent } from 'primeng/fileupload';
+
 
 @Component({
   selector: 'app-food-form',
@@ -20,15 +23,17 @@ import { FoodService } from '../services/food.service';
     RouterModule,
     InputTextModule,
     InputNumberModule,
-    CardModule
+    CardModule,
+    FileUploadModule
   ],
   templateUrl: './food-form.component.html',
   styleUrl: './food-form.component.scss'
 })
 export class FoodFormComponent {
-  formFood!: FormGroup
+  formFood!: FormGroup //Tracks the value and validity state of a group of FormControl instances.
   isSaveInProgress: boolean = false;
   edit: boolean = false;
+  selectedFile:File | null = null;
 
   constructor(private fb: FormBuilder,
     private foodService: FoodService,
@@ -52,9 +57,13 @@ export class FoodFormComponent {
     }
   }
 
+  onFileSelected(event:FileSelectEvent){
+    this.selectedFile = event.files[0];
+  }
+
   getFoodById(id: number) {
     this.foodService.getFoodById(id).subscribe({
-      next: foundFood => { //min 23
+      next: (foundFood) => { //min 23
         this.formFood.patchValue(foundFood);
       },
       error: () => {
@@ -68,6 +77,37 @@ export class FoodFormComponent {
     });
   }
 
+  changeImage(event: FileSelectEvent) {
+    this.selectedFile = event.files[0];
+    if (!this.selectedFile) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Seleccione una imagen e intente nuevamente',
+      });
+      return;
+    }
+    this.foodService.updateFoodImage(this.formFood.value.id, this.selectedFile).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Guardado',
+          detail: 'Libro actualizado correctamente',
+        });
+        this.isSaveInProgress = false;
+        this.router.navigateByUrl('/');
+      },
+      error: () => {
+        this.isSaveInProgress = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Revise el archivo seleccionado',
+        });
+      },
+    });
+  }
+
   createFood() {
     if (this.formFood.invalid) { //Datos invalidos
       this.messageService.add({
@@ -77,7 +117,15 @@ export class FoodFormComponent {
       });
       return
     }
-    this.foodService.createFood(this.formFood.value).subscribe({
+    if (!this.selectedFile) { //No selecciono imagen
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Por favor seleccione una imagen'
+      });
+      return
+    }
+    this.foodService.createFood(this.formFood.value, this.selectedFile).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'sucess',
@@ -98,31 +146,33 @@ export class FoodFormComponent {
   }
 
   updateFood() {
-    if (this.formFood.invalid) { 
+    if (this.formFood.invalid) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Revise los campos e intente nuevamente'
+        detail: 'Revise los campos e intente nuevamente',
       });
-      return
+      return;
     }
-    this.foodService.createFood(this.formFood.value).subscribe({
+    this.isSaveInProgress = true;
+    this.foodService.updateFood(this.formFood.value).subscribe({
       next: () => {
         this.messageService.add({
-          severity: 'sucess',
+          severity: 'success',
           summary: 'Guardado',
-          detail: 'Comida actualizada correctamente'
-        })
-        this.router.navigateByUrl('/')
+          detail: 'Comida actualizada correctamente',
+        });
+        this.isSaveInProgress = false;
+        this.router.navigateByUrl('/');
       },
       error: () => {
+        this.isSaveInProgress = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Revise los campos e intente nuevamente'
+          detail: 'Revise los campos e intente nuevamente',
         });
-        this.router.navigateByUrl('/')
-      }
+      },
     });
   }
 }

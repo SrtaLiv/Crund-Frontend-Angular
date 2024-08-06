@@ -20,6 +20,19 @@
                 <input id="firstname1" type="text" pInputText formControlName="unit"
                     class="text-base text-color surface-overlay p-2 border-1 border-solid surface-border border-round appearance-none outline-none focus:border-primary w-full">
             </div>
+
+            <div class="field flex flex-column gap-1">
+                <p-fileUpload
+                  mode="basic"
+                  [chooseLabel]="edit?'Cambiar imagen':'Seleccionar imagen'"
+                  chooseIcon="pi pi-upload"
+                  name="demo[]"
+                  [customUpload]="true"
+                  accept="image/*"
+                  maxFileSize="1000000"
+                  (onSelect)="edit?changeImage($event):onFileSelected($event)"
+                />
+            </div>
             
             <div class="flex gap-2">
                 <p-button label="Guardar" [loading]="isSaveInProgress" type="submit" />
