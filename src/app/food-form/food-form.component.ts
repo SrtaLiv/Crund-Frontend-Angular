@@ -44,7 +44,7 @@ export class FoodFormComponent {
     this.formFood = this.fb.group({
       id: [null], //en caso de estar editando
       name: ['', Validators.required],
-      mount: ['', Validators.required, Validators.min(1)],
+      mount: [0, [Validators.required, Validators.min(0)]],
       unit: ['', Validators.required],
     })
   }

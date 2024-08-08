@@ -23,8 +23,8 @@ export class FoodService {
   createFood(food:Food, image:File){ //peticion de un objeto tipo food
     const formData = new FormData();
     formData.append('food', new Blob([JSON.stringify(food)], { type: 'application/json' }));
-
     formData.append('file', image); //Debe llamarse el file igual q en el backend
+    
     return this.http.post<Food>(this.apiUrl, food);
   }
 
